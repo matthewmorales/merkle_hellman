@@ -68,9 +68,52 @@ def encrypt(input, beta_key):
 		knapsack = knapsack + (int(item) * beta_key[counter])
 		print("string: (%s)   beta: (%s)" % (item, beta_key[counter]))
 		counter += 1
-	print knapsack
+	return knapsack
 
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = egcd(b % a, a)
+        return (g, x - (b // a) * y, y)
 
+def modinv(a, m):
+    gcd, x, y = egcd(a, m)
+    if gcd != 1:
+        return None  # modular inverse does not exist
+    else:
+        return x % m
+
+def decrypt(encrypted, r, q, w):
+	modular_inv = modinv(r, q)
+	counter = 0
+	rebuild_array = []
+	decrypted_message_array = []
+	decrypted_message = ""
+
+	midcrypt = (encrypted * modular_inv) % q
+	#print("midcrypt (%s)" % (midcrypt))
+	#print("w (%s)" % (w))
+
+	for entry in reversed(w):
+		decrypted_message_array.append(0)
+		if entry <= midcrypt:
+			midcrypt = midcrypt - entry
+			rebuild_array.append(counter)
+		counter += 1
+	#print rebuild_array
+
+	for entry in rebuild_array:
+		decrypted_message_array[entry] = 1
+
+	decrypted_message_array.reverse()
+
+	for item in decrypted_message_array:
+		decrypted_message = decrypted_message + str(item)
+
+	return decrypted_message
+
+		
 
 binary_string = str(receive_binary())
 s_i_sequence = super_increasing(binary_string)
@@ -79,5 +122,5 @@ sigma_sequence = s_i_sequence[-1] + (s_i_sequence[-1]-1)
 used_pairs = coprime_pairs(sigma_sequence)
 beta = public_key(s_i_sequence, used_pairs)
 
-encrypt(binary_string, beta)
-
+encrypted_mess = encrypt(binary_string, beta)
+print decrypt(encrypted_mess, used_pairs[0], used_pairs[1], s_i_sequence)

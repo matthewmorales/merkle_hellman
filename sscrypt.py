@@ -10,5 +10,5 @@ def super_increasing(n):
 
 	return a
 
-print super_increasing("1110110")
-
+s_i_sequence = super_increasing("1110000110")
+sigma_sequence = s_i_sequence[-1] + (s_i_sequence[-1]-1)

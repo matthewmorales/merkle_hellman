@@ -1,10 +1,12 @@
 import random
+import sys
+
+argument = sys.argv[1]
 
 #receive binary string
 def receive_binary():
 
 	return input("Enter Binary String: ")
-
 
 #create super increasing set, based on string size
 def super_increasing(n):
@@ -37,7 +39,7 @@ def farey(n):
 
     return [fs[k] for k in sorted(fs.keys())]
 
-#generate random number larger than sigma_sequence, and a comprime less than said random number
+#generate a number larger than sigma_sequence, and a comprime less than said random number
 def coprime_pairs(sigma):
 	q = int(random.random() * 100)
 	q = q + sigma
@@ -52,7 +54,7 @@ def coprime_pairs(sigma):
 				break
 	return used_pair
 
-
+#creat public key
 def public_key(w, pairs):
 	beta = []
 
@@ -61,6 +63,7 @@ def public_key(w, pairs):
 
 	return beta
 
+#encrypt using keys
 def encrypt(input, beta_key):
 	knapsack = 0
 	counter = 0
@@ -113,14 +116,124 @@ def decrypt(encrypted, r, q, w):
 
 	return decrypted_message
 
-		
+def write_encrypted_message(message):
 
-binary_string = str(receive_binary())
-s_i_sequence = super_increasing(binary_string)
-sigma_sequence = s_i_sequence[-1] + (s_i_sequence[-1]-1)
+	print('Generating encrypted.txt') 
+	name = 'encrypted.txt'  # Name of text file coerced with +.txt
+	try:
+		file = open(name,'wb')   # Trying to create a new file or open one
+		file.write(str(message))
+		file.close()
 
-used_pairs = coprime_pairs(sigma_sequence)
-beta = public_key(s_i_sequence, used_pairs)
+	except:
+		print('File Creation Failed')
+		sys.exit(0) # quit Python
 
-encrypted_mess = encrypt(binary_string, beta)
-print decrypt(encrypted_mess, used_pairs[0], used_pairs[1], s_i_sequence)
+def write_public_key(key):
+	print('Generating public.txt') 
+
+	name = 'public.txt'  # Name of text file coerced with +.txt
+	
+	try:
+		file = open(name,'wb')   # Trying to create a new file or open one
+		for item in key:
+			file.write(str(item))
+			file.write("\n")
+		file.close()
+
+	except:
+		print('File Creation Failed')
+		sys.exit(0) # quit Python
+
+def write_private_key(w, q, r):
+	print('Generating private.txt') 
+
+	name = 'private.txt'  # Name of text file coerced with +.txt
+
+	try:
+		file = open(name,'wb')   # Trying to create a new file or open one
+		for item in w:
+			file.write(str(item))
+			file.write("|")
+
+		file.write("\n")
+		file.write(str(q))
+		file.write("\n")
+		file.write(str(r))
+		file.close()
+
+	except:
+		print('File Creation Failed')
+		sys.exit(0) # quit Python
+
+def parse_private():  #returns keys as a tuple of the form (superincreasing sequence, number chosen as larger than the sum of S_I Sequence, and Q's Coprime)
+	private_keys = open("private.txt")
+	lines = private_keys.readlines()
+	private_keys.close()
+
+	w = (lines[0].rstrip('\n').split('|'))
+	w.pop(-1)
+	w = map(int, w)
+	q = int(lines[1].rstrip('\n'))
+	r = int(lines[2].rstrip('\n'))
+
+	keys = (w, q, r)
+	
+	return keys
+
+def parse_encrypted_message():
+	message = open("encrypted.txt")
+	content = int(message.read())
+	return content
+
+def check_super_increasing(w):
+	rolling_total = 0
+	check = True
+	for item in w:
+		if item > rolling_total:
+			rolling_total = rolling_total + item
+		else:
+			print "W is not a Super Increasing Sequence"
+			check = False
+			sys.exit(0)
+	if check == True:
+		print("W: %s is a Super Increasing Sequence" % (w))
+
+if argument == '-e':
+	#encrypt, write public key to file, encrypted message to file, private keys to file
+	binary_string = str(receive_binary())
+	s_i_sequence = super_increasing(binary_string)
+	sigma_sequence = s_i_sequence[-1] + (s_i_sequence[-1]-1)
+
+	used_pairs = coprime_pairs(sigma_sequence)
+	beta = public_key(s_i_sequence, used_pairs)
+
+	encrypted_mess = encrypt(binary_string, beta)
+
+	write_encrypted_message(encrypted_mess)
+	write_public_key(beta)
+	write_private_key(s_i_sequence, used_pairs[1], used_pairs[0])
+
+elif argument == '-d':
+	#decrypt using private keys
+	keys = parse_private()
+	encrypted_mess = parse_encrypted_message()
+
+	print decrypt(encrypted_mess, keys[2], keys[1], keys[0])
+
+elif argument =='-v':
+	#verify w is super increasing (from text file) and that GCD(q,r) = 1 and prints the corresponding public key
+	keys = parse_private()
+
+	check_super_increasing(keys[0])
+	#print keys[0]
+	#check that 2w[n] is < q, super quick, not going to make another function for that
+	print "2r[n] < B" if (2*keys[0][-1]) < keys[1] else "2r[n] !< B"
+	if egcd(keys[1], keys[2])[0] == 1:
+		print("The greatest common denominator of %s and %s is 1" % (keys[1], keys[2]))
+	else:
+		print("The greatest common denominator of %s and %s is **NOT** 1" % (keys[1], keys[2]))
+	print "The public key is as follows: "
+	print public_key(keys[0], (keys[2], keys[1]))
+else:
+	print 'Invalid Arguments Passed'

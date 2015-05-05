@@ -21,7 +21,7 @@ def super_increasing(n):
 
 #generate a list of completely reduced fractions from 0 to 1 w/ n being the largest denominator.
 #fractions are listed from smallest to largest, by their nature, completely reduced fractions are created by coprime pairs
-def farey(n):
+def farey(n): #this is where the program slows down incredibly, as the string grows
     def gcd(a,b):
         while b: a,b = b,a%b
         return a
@@ -37,7 +37,7 @@ def farey(n):
                 r = simplify(i2,i)
                 fs[float(i2)/i] = r
 
-    return [fs[k] for k in sorted(fs.keys())]
+    return [fs[k] for k in sorted(fs.keys())] 
 
 #generate a number larger than sigma_sequence, and a comprime less than said random number
 def coprime_pairs(sigma):
@@ -120,6 +120,19 @@ def write_encrypted_message(message):
 
 	print('Generating encrypted.txt') 
 	name = 'encrypted.txt'  # Name of text file coerced with +.txt
+	try:
+		file = open(name,'wb')   # Trying to create a new file or open one
+		file.write(str(message))
+		file.close()
+
+	except:
+		print('File Creation Failed')
+		sys.exit(0) # quit Python
+
+def write_decrypted_message(message):
+
+	print('Generating decrypted.txt') 
+	name = 'decrypted.txt'  # Name of text file coerced with +.txt
 	try:
 		file = open(name,'wb')   # Trying to create a new file or open one
 		file.write(str(message))
@@ -219,7 +232,9 @@ elif argument == '-d':
 	keys = parse_private()
 	encrypted_mess = parse_encrypted_message()
 
-	print decrypt(encrypted_mess, keys[2], keys[1], keys[0])
+	decrypted = decrypt(encrypted_mess, keys[2], keys[1], keys[0])
+	print decrypted
+	write_decrypted_message(decrypted)
 
 elif argument =='-v':
 	#verify w is super increasing (from text file) and that GCD(q,r) = 1 and prints the corresponding public key
@@ -236,4 +251,4 @@ elif argument =='-v':
 	print "The public key is as follows: "
 	print public_key(keys[0], (keys[2], keys[1]))
 else:
-	print 'Invalid Arguments Passed'
+	print 'Invalid Argument Passed'
